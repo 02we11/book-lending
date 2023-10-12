@@ -1,152 +1,90 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    height: 100vh;
-    overflow-y: auto;
+const addButton = document.querySelector('.button-add');
+const displayButton = document.querySelector('.button-display');
+const bookList = document.querySelector('.book-list');
+const statusMessage = document.querySelector('.status-message');
+
+let books = JSON.parse(localStorage.getItem('books')) || [];
+let displayAllBooks = false;
+
+addButton.addEventListener('click', addBook);
+displayButton.addEventListener('click', toggleDisplay);
+
+function addBook() {
+    const bookTitle = prompt('本のタイトルを入力してください:');
+    if (bookTitle) {
+        const newBook = {
+            title: bookTitle,
+            status: '貸出可能',
+            id: Date.now()
+        };
+        books.push(newBook);
+        saveBooksToLocalStorage();
+        if (displayAllBooks || newBook.status === '貸出中') {
+            displayBook(newBook);
+        }
+        updateStatusMessage();
+    }
 }
 
-.header {
-    background-color: #333;
-    color: white;
-    padding: 15px;
-    text-align: center;
-    width: 100%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+function displayBook(book) {
+    const bookItem = document.createElement('div');
+    bookItem.classList.add('book-item');
+    bookItem.innerHTML = `
+        <h2>${book.title}</h2>
+        <p>ステータス: ${book.status}</p>
+        <div class="buttons-container">
+            <button class="button delete-button">削除</button>
+            <button class="button lend-button">貸出/返却</button>
+        </div>
+    `;
+    bookList.appendChild(bookItem);
+
+    const lendButton = bookItem.querySelector('.lend-button');
+    lendButton.addEventListener('click', () => {
+        const index = books.findIndex(b => b.id === book.id);
+        if (books[index].status === '貸出可能') {
+            books[index].status = '貸出中';
+        } else {
+            books[index].status = '貸出可能';
+        }
+        saveBooksToLocalStorage();
+        bookItem.querySelector('p').textContent = `ステータス: ${books[index].status}`;
+    });
+
+    const deleteButton = bookItem.querySelector('.delete-button');
+    deleteButton.addEventListener('click', () => {
+        const index = books.findIndex(b => b.id === book.id);
+        books.splice(index, 1);
+        saveBooksToLocalStorage();
+        bookItem.remove();
+        updateStatusMessage();
+    });
 }
 
-.button-container {
-    margin-top: 20px;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
+function toggleDisplay() {
+    displayAllBooks = !displayAllBooks;
+    bookList.innerHTML = '';
+    updateStatusMessage();
+    if (displayAllBooks) {
+        books.forEach(book => {
+            displayBook(book);
+        });
+    } else {
+        const lendBooks = books.filter(book => book.status === '貸出中');
+        lendBooks.forEach(book => {
+            displayBook(book);
+        });
+    }
 }
 
-.button {
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+function saveBooksToLocalStorage() {
+    localStorage.setItem('books', JSON.stringify(books));
 }
 
-.button:hover {
-    background-color: #45a049;
+function updateStatusMessage() {
+    statusMessage.textContent = displayAllBooks ? 'すべての本を表示しています' : '貸出中の本を表示しています';
 }
 
-.delete-button, .lend-button {
-    background-color: #f44336;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-}
-
-.delete-button:hover, .lend-button:hover {
-    background-color: #d32f2f;
-}
-
-.book-item {
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin: 10px 0;
-    width: 300px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.book-item h2 {
-    text-align: center;
-    margin-bottom: 10px;
-    font-size: 18px;
-}
-
-.status-message {
-    margin-top: 20px;
-    font-size: 14px;
-    text-align: center;
-    color: #555;
-}
-
-.status-message small {
-    font-size: 12px;
-    color: #888;
-}
-
-/* ボタンを中央揃えにする */
-.button-container {
-    text-align: center;
-}
-
-/* リストアイテムのスタイル */
-.book-list {
-    list-style: none;
-    padding: 0;
-    width: 100%;
-}
-
-.book-item {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    padding: 10px;
-    width: 80%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* 貸出中の本を区別するスタイル */
-.book-item.lent {
-    background-color: #ffecb3;
-    border: 1px solid #ff9800;
-}
-
-/* ボタンの装飾 */
-.button {
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    border: 2px solid #4caf50;
-    margin-top: 10px;
-}
-
-.button:hover {
-    background-color: #45a049;
-}
-
-.delete-button, .lend-button {
-    background-color: #f44336;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.3s ease;
-    border: 2px solid #f44336;
-}
-
-.delete-button:hover, .lend-button:hover {
-    background-color: #d32f2f;
-}
+window.onload = function() {
+    toggleDisplay();
+};
