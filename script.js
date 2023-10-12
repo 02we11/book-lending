@@ -22,7 +22,6 @@ function addBook() {
         if (displayAllBooks || newBook.status === '貸出中') {
             displayBook(newBook);
         }
-        updateStatusMessage();
     }
 }
 
@@ -57,19 +56,19 @@ function displayBook(book) {
         books.splice(index, 1);
         saveBooksToLocalStorage();
         bookItem.remove();
-        updateStatusMessage();
     });
 }
 
 function toggleDisplay() {
     displayAllBooks = !displayAllBooks;
     bookList.innerHTML = '';
-    updateStatusMessage();
     if (displayAllBooks) {
+        statusMessage.textContent = 'すべての本を表示しています';
         books.forEach(book => {
             displayBook(book);
         });
     } else {
+        statusMessage.textContent = '貸出中の本を表示しています';
         const lendBooks = books.filter(book => book.status === '貸出中');
         lendBooks.forEach(book => {
             displayBook(book);
@@ -81,10 +80,4 @@ function saveBooksToLocalStorage() {
     localStorage.setItem('books', JSON.stringify(books));
 }
 
-function updateStatusMessage() {
-    statusMessage.textContent = displayAllBooks ? 'すべての本を表示しています' : '貸出中の本を表示しています';
-}
-
-window.onload = function() {
-    toggleDisplay();
-};
+toggleDisplay();
